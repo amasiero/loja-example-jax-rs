@@ -44,5 +44,17 @@ public class CarrinhoTest {
 		String conteudo = client.target(location).request().get(String.class);
 		Assert.assertTrue(conteudo.contains("Mouse"));
 	}
+	
+	@Test
+	public void testeRemoverNotebookCarrinho() {
+		Client client = ClientBuilder.newClient();
+		WebTarget target = client.target("http://localhost:8080/loja");
+		
+		Response response = target.path("/carrinhos/1/produto/6924").request().delete();
+		Assert.assertEquals(200, response.getStatus());
+		
+		String conteudo = target.path("/carrinhos/1").request().get(String.class);
+		Assert.assertFalse(conteudo.contains("Notebook"));
+	}
 
 }
