@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.thoughtworks.xstream.XStream;
+
 public class Carrinho {
 
 	private long id;
@@ -73,6 +75,10 @@ public class Carrinho {
 
 	public List<Produto> getProdutos() {
 		return produtos;
+	}
+
+	public String toXML() {
+		return new XStream().toXML(this);
 	}
 
 }
