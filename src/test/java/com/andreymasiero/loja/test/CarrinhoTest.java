@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import com.andreymasiero.loja.model.Carrinho;
 import com.andreymasiero.loja.model.Produto;
+import com.thoughtworks.xstream.XStream;
 
 public class CarrinhoTest {
 	
@@ -56,5 +57,29 @@ public class CarrinhoTest {
 		String conteudo = target.path("/carrinhos/1").request().get(String.class);
 		Assert.assertFalse(conteudo.contains("Notebook"));
 	}
-
+	
+	@Test
+	public void testeAtualizacaoQtdeDeMonitoresCarrinho() {
+		Client client = ClientBuilder.newClient();
+		WebTarget target = client.target("http://localhost:8080/loja");
+		
+		String conteudo = target.path("/carrinhos/1").request().get(String.class);
+		
+		Carrinho carrinho = (Carrinho) new XStream().fromXML(conteudo);
+		
+		Produto produto = (Produto) carrinho.getProdutos()
+				.stream().filter(p -> p.getId() == 6669l)
+				.toArray()[0];
+		produto.setQuantidade(1);
+		
+		String xml = new XStream().toXML(produto);
+		Entity<String> entity = Entity.entity(xml, MediaType.APPLICATION_XML);
+		
+		Response response = target.path("/carrinhos/1/produto/6669/quantidade")
+				.request().put(entity);
+		Assert.assertEquals(200, response.getStatus());
+		
+		conteudo = target.path("/carrinhos/1").request().get(String.class);
+		Assert.assertTrue(conteudo.contains("<quantidade>1</quantidade>"));
+	}
 }
