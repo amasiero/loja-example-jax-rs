@@ -12,7 +12,6 @@ import org.junit.Test;
 
 import com.andreymasiero.loja.model.Carrinho;
 import com.andreymasiero.loja.model.Produto;
-import com.thoughtworks.xstream.XStream;
 
 public class CarrinhoTest {
 	
@@ -20,8 +19,8 @@ public class CarrinhoTest {
 	public void testeCarrinhoExistenteNoBanco() {
 		Client client = ClientBuilder.newClient();
 		WebTarget target = client.target("http://localhost:8080/loja");
-		String conteudo = target.path("/carrinhos/1").request().get(String.class);
-		Assert.assertTrue(conteudo.contains("Lins de Vasconcelos"));
+		Carrinho carrinho = target.path("/carrinhos/1").request().get(Carrinho.class);
+		Assert.assertEquals("Avenida Lins de Vasconcelos 1222, 10 andar", carrinho.getRua());
 	}
 	
 	@Test
@@ -34,16 +33,14 @@ public class CarrinhoTest {
 		carrinho.setRua("Avenida Lins de Vasconcelos 1222, 10 andar");
 		carrinho.setCidade("São Paulo");
 		
-		String xml = carrinho.toXML();
-		
-		Entity<String> entity = Entity.entity(xml, MediaType.APPLICATION_XML);
+		Entity<Carrinho> entity = Entity.entity(carrinho, MediaType.APPLICATION_JSON);
 		
 		Response response = target.path("/carrinhos").request().post(entity);
 		Assert.assertEquals(201, response.getStatus());
 		
 		String location = response.getHeaderString("Location");
-		String conteudo = client.target(location).request().get(String.class);
-		Assert.assertTrue(conteudo.contains("Mouse"));
+		Carrinho carrinhoCarregado = client.target(location).request().get(Carrinho.class);
+		Assert.assertTrue(carrinhoCarregado.getProdutos().get(0).getNome().contains("Mouse"));
 	}
 	
 	@Test
@@ -54,8 +51,8 @@ public class CarrinhoTest {
 		Response response = target.path("/carrinhos/1/produto/6924").request().delete();
 		Assert.assertEquals(200, response.getStatus());
 		
-		String conteudo = target.path("/carrinhos/1").request().get(String.class);
-		Assert.assertFalse(conteudo.contains("Notebook"));
+		Carrinho carrinho = target.path("/carrinhos/1").request().get(Carrinho.class);
+		Assert.assertEquals(1, carrinho.getProdutos().size());
 	}
 	
 	@Test
@@ -63,23 +60,20 @@ public class CarrinhoTest {
 		Client client = ClientBuilder.newClient();
 		WebTarget target = client.target("http://localhost:8080/loja");
 		
-		String conteudo = target.path("/carrinhos/1").request().get(String.class);
-		
-		Carrinho carrinho = (Carrinho) new XStream().fromXML(conteudo);
+		Carrinho carrinho = target.path("/carrinhos/1").request().get(Carrinho.class);
 		
 		Produto produto = (Produto) carrinho.getProdutos()
 				.stream().filter(p -> p.getId() == 6669l)
 				.toArray()[0];
 		produto.setQuantidade(1);
 		
-		String xml = new XStream().toXML(produto);
-		Entity<String> entity = Entity.entity(xml, MediaType.APPLICATION_XML);
+		Entity<Produto> entity = Entity.entity(produto, MediaType.APPLICATION_JSON);
 		
 		Response response = target.path("/carrinhos/1/produto/6669/quantidade")
 				.request().put(entity);
 		Assert.assertEquals(200, response.getStatus());
 		
-		conteudo = target.path("/carrinhos/1").request().get(String.class);
-		Assert.assertTrue(conteudo.contains("<quantidade>1</quantidade>"));
+		carrinho = target.path("/carrinhos/1").request().get(Carrinho.class);
+		Assert.assertEquals(1, carrinho.getProdutos().get(0).getQuantidade());
 	}
 }

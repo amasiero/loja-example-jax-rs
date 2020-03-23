@@ -4,14 +4,22 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import com.thoughtworks.xstream.XStream;
 
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Carrinho {
 
 	private long id;
 	private List<Produto> produtos = new ArrayList<Produto>();
 	private String rua;
 	private String cidade;
+	
+	public Carrinho() {}
 
 	public Carrinho adiciona(Produto produto) {
 		produtos.add(produto);
